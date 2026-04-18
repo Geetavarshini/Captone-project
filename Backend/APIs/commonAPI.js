@@ -1,8 +1,8 @@
 import exp from 'express';
-import { authenticate } from '../Services/authService.js';
-import { verifyToken } from '../middleWare/verifyToken.js';
+import { authenticate } from '../services/authService.js';
+import { verifyToken } from '../middlewares/verifyToken.js';
 import { compare,hash } from 'bcryptjs';
-import  UserTypeModel  from  '../Models/userModel.js'
+import { UserTypeModel } from '../models/userModel.js';
 
 export const commonRoute=exp.Router();
 
@@ -15,8 +15,9 @@ commonRoute.post("/authenticate",async(req,res)=>{
         //save token as HTTPOnly cookie
         res.cookie("token",token,{
             httpOnly:true,
-            sameSite:"lax",
-            secure:false
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure:process.env.NODE_ENV === "production" ? true : false,
+            maxAge: 3600000 // 1 hour
         });
         //send res
         res.status(201).json({message:"Login Success",payload:user});
@@ -27,8 +28,9 @@ commonRoute.get("/logout",async(req,res)=>{
     //must match orginal set settings
     res.clearCookie('token',{
         httpOnly:true,
-        secure:false,
-        sameSite:"lax"
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+        secure:process.env.NODE_ENV === "production" ? true : false,
+        maxAge: 3600000 // 1 hour
     })
     res.status(200).json({message:"Logged Out Successfully"});
 })
@@ -53,4 +55,11 @@ commonRoute.put("/change-password/:userId",verifyToken,async(req,res)=>{
     let hashedPassword=await hash(newPassword,12)
     let updated=await UserTypeModel.findByIdAndUpdate(userId,{$set:{password:hashedPassword}})
     return res.status(200).json({message:"Password changed successfully"});
+})
+
+
+
+//page refresh
+commonRoute.get("/check-auth",verifyToken("USER","AUTHOR","ADMIN"),async(req,res)=>{
+ res.status(200).json({message:"User is authenticated",payload:req.user});   
 })

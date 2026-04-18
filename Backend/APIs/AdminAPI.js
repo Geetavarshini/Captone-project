@@ -1,9 +1,9 @@
- import exp from 'express';
+import exp from 'express';
 export const adminRoute=exp.Router();
 
-import { verifyToken } from '../middleWare/verifyToken.js';
-import { checkAuthor } from '../middleWare/checkAuthor.js';
-import { UserTypeModel } from '../Models/userModel.js';
+import { verifyToken } from '../middlewares/verifyToken.js';
+import { checkAuthor } from '../middlewares/checkAuthor.js';
+import { UserTypeModel } from '../models/userModel.js';
 
 
 

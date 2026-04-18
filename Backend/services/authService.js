@@ -56,4 +56,7 @@ export const authenticate=async(email,password)=>{
     const userObj=user.toObject();
     delete userObj.password;
     return {token ,user:userObj};
+
+    
 }
+
