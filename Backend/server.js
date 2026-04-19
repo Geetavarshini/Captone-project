@@ -12,9 +12,11 @@ const app=exp()
 
 //use cors middleware
 app.use(cors({
-    origin: ['https://blogapp-indol-six.vercel.app','https://blogapp-9cdzt06r7-nithin-6546s-projects.vercel.app'
-    ], //  frontend URL
-    credentials: true, // Allow cookies to be sent
+  origin: [
+    "http://localhost:5173",
+    "https://capstone-frontend-qno8xmpsw-geetavarshinis-projects.vercel.app","https://capstone-frontend-roan-omega.vercel.app"
+  ],
+  credentials: true,
 }));
 // add body parser middleware
 app.use(exp.json())
@@ -34,7 +36,7 @@ const connectDb=async()=> {
     try{
     await connect(process.env.DB_URL)
     console.log("Connected to Database");
-    app.listen(process.env.PORT,()=> console.log("Server Started"));
+    app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
     }catch(err){
         console.log("Error in Database Connection",err);
     }  
@@ -85,7 +87,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  // ✅ HANDLE CUSTOM ERRORS
+  // HANDLE CUSTOM ERRORS
   if (err.status) {
     return res.status(err.status).json({
       message: "error occurred",

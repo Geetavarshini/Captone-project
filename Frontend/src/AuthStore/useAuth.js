@@ -1,8 +1,10 @@
+
 import axios from "axios";
 import { create } from "zustand";
-import { persist } from "zustand/middleware"; // 1. Import persist middleware
+import { persist } from "zustand/middleware";
 
-const BASE_URL = "https://capstone-project-rbl1.onrender.com";
+const BASE_URL = import.meta.env.VITE_API_URL;
+
 export const useAuth = create(
   persist(
     (set) => ({
@@ -10,17 +12,19 @@ export const useAuth = create(
       loading: false,
       error: null,
       isAuthenticated: false,
+      isHydrated: false,
 
-      // LOGIN LOGIC
-      login: async (userCredWithRole) => {
-        let { role, ...userCredObj } = userCredWithRole;
+      // LOGIN
+      login: async (userCredObj) => {
         try {
           set({ loading: true, error: null });
-          let res = await axios.post(
+
+          const res = await axios.post(
             `${BASE_URL}/common-api/authenticate`,
             userCredObj,
             { withCredentials: true }
           );
+
           set({
             loading: false,
             isAuthenticated: true,
@@ -36,55 +40,56 @@ export const useAuth = create(
         }
       },
 
-      // LOGOUT LOGIC
+      // LOGOUT
       logout: async () => {
-        try {
-          set({ loading: true, error: null });
-          await axios.get(`${BASE_URL}/common-api/logout`, {
-            withCredentials: true,
-          });
-          set({
-            loading: false,
-            isAuthenticated: false,
-            currentUser: null,
-          });
-          localStorage.removeItem("user-auth-storage");
-        } catch (err) {
-          set({
-            loading: false,
-            error: err.response?.data?.message || "Logout failed",
-          });
-        }
+        await axios.get(`${BASE_URL}/common-api/logout`, {
+          withCredentials: true,
+        });
+
+        set({
+          currentUser: null,
+          isAuthenticated: false,
+        });
+
+        localStorage.removeItem("user-auth-storage");
       },
 
-      // SESSION CHECK
+      // CHECK AUTH
       checkAuth: async () => {
-        set({ loading: true });
         try {
-          let res = await axios.get(`${BASE_URL}/common-api/check-auth`, {
-            withCredentials: true,
-          });
+          const res = await axios.get(
+            `${BASE_URL}/common-api/check-auth`,
+            { withCredentials: true }
+          );
+
           set({
-            loading: false,
             isAuthenticated: true,
             currentUser: res.data.payload,
           });
-        } catch (err) {
+        } catch {
           set({
-            loading: false,
             isAuthenticated: false,
             currentUser: null,
-            error: null,
           });
         }
       },
     }),
     {
       name: "user-auth-storage",
+
       partialize: (state) => ({
         currentUser: state.currentUser,
         isAuthenticated: state.isAuthenticated,
       }),
+
+      // ✅ CORRECT HYDRATION FIX
+      onRehydrateStorage: () => (state, error) => {
+        if (!error) {
+          setTimeout(() => {
+            useAuth.setState({ isHydrated: true });
+          }, 0);
+        }
+      },
     }
   )
 );
